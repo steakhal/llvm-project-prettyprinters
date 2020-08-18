@@ -1,0 +1,71 @@
+from enum import Enum
+from itertools import count
+from collections import namedtuple
+RangePart = namedtuple('RangePart', 'name value')
+
+
+#define Q(x) #x
+#define QUOTE(x) Q(x)
+
+
+#define BASIC_SVAL(Id, Parent) QUOTE(Id##Kind),
+#define ABSTRACT_SVAL_WITH_KIND(Id, Parent) QUOTE(Id##Kind),
+BaseKind = Enum('BaseKind', [
+  #include "SVals.def"
+], start=0)
+#undef BASIC_SVAL
+#undef ABSTRACT_SVAL_WITH_KIND
+
+
+#define NONLOC_SVAL(Id, Parent) QUOTE(Id##Kind),
+NonLocKind = Enum('NonLocKind', [
+  #include "SVals.def"
+], start=0)
+#undef NONLOC_SVAL
+
+
+#define LOC_SVAL(Id, Parent) QUOTE(Id##Kind),
+LocKind = Enum('LocKind', [
+  #include "SVals.def"
+], start=0)
+#undef LOC_SVAL
+
+
+
+#define REGION(Id, Parent) QUOTE(Id##Kind),
+__regions = [
+  #include "Regions.def"
+]
+#undef REGION
+
+#define REGION_RANGE(Id, First, Last) RangePart(QUOTE(BEGIN_##Id), QUOTE(First)), RangePart(QUOTE(END_##Id), QUOTE(Last)),
+__regionRangeParts = [
+  #include "Regions.def"
+]
+#undef REGION_RANGE
+
+__normalEnumValues = list(zip(__regions, count()))
+__rangePartEnumValues = [ (x.name, __regions.index(x.value)) for x in __regionRangeParts ]
+
+RegionKind = Enum('RegionKind', [*__normalEnumValues, *__rangePartEnumValues])
+
+
+
+#define SYMBOL(Id, Parent) QUOTE(Id##Kind),
+__symbols = [
+  #include "Symbols.def"
+]
+#undef SYMBOL
+
+#define SYMBOL_RANGE(Id, First, Last) RangePart(QUOTE(BEGIN_##Id), QUOTE(First)), RangePart(QUOTE(END_##Id), QUOTE(Last)),
+__symbolRangeParts = [
+  #include "Symbols.def"
+]
+#undef SYMBOL_RANGE
+
+__normalEnumValues = list(zip(__symbols, count()))
+__rangePartEnumValues = [ (x.name, __symbols.index(x.value)) for x in __symbolRangeParts ]
+
+SymKind = Enum('SymKind', [*__normalEnumValues, *__rangePartEnumValues])
+
+
